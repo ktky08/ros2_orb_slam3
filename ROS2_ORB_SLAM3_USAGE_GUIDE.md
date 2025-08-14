@@ -132,153 +132,93 @@ To use your own EuRoC MAV dataset:
    ros2 run ros2_orb_slam3 mono_driver_node.py --ros-args -p settings_name:=EuRoC -p image_seq:=your_dataset_name
    ```
 
-## Using with Gazebo Live Simulation
+## Using with Gazebo Garden Live Simulation
 
-### 1. Setup Gazebo Environment
+### Prerequisites
+- Gazebo Garden (gz sim 8.9.0 or later) installed
+- PX4 SITL (Software In The Loop) setup
+- Camera sensor configured in your Gazebo world
+
+### Setup Steps
+
+1. **Start Gazebo Garden with your custom world:**
 ```bash
-# Install Gazebo if not already installed
-sudo apt install -y gazebo libgazebo-dev
+# For your specific setup with custom forest world
+PX4_GZ_WORLD=z_my_forest make px4_sitl gz_x500_custom
 
-# Create a simple world or use existing one
+# Alternative: Direct gz sim command
+gz sim -s -v 4 z_my_forest.sdf
 ```
 
-### 2. Launch Gazebo with Camera
+2. **In a new terminal, start the ORB-SLAM3 C++ node:**
 ```bash
-# Terminal 1: Launch Gazebo with a camera-equipped robot
-gazebo --verbose -s libgazebo_ros_factory.so
-
-# Or use a specific world file
-gazebo --verbose -s libgazebo_ros_factory.so your_world.world
+source ~/ros2_ws/install/setup.bash
+ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
 ```
 
-### 3. Create a Custom Python Driver for Live Camera
-Create a new file: `~/ros2_ws/src/ros2_orb_slam3/scripts/live_camera_driver.py`
-
-```python
-#!/usr/bin/env python3
-
-import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import Image
-from std_msgs.msg import Float64, String
-from cv_bridge import CvBridge
-import cv2
-import time
-
-class LiveCameraDriver(Node):
-    def __init__(self):
-        super().__init__('live_camera_driver')
-        
-        # Publishers
-        self.img_publisher = self.create_publisher(Image, '/mono_py_driver/img_msg', 10)
-        self.timestep_publisher = self.create_publisher(Float64, '/mono_py_driver/timestep_msg', 10)
-        self.config_publisher = self.create_publisher(String, '/mono_py_driver/experiment_settings', 10)
-        
-        # Subscriber for handshake
-        self.ack_subscriber = self.create_subscription(
-            String, '/mono_py_driver/exp_settings_ack', self.ack_callback, 10)
-        
-        # CV Bridge
-        self.bridge = CvBridge()
-        
-        # Camera setup
-        self.cap = cv2.VideoCapture(0)  # Use 0 for default camera, or specify device
-        if not self.cap.isOpened():
-            self.get_logger().error('Failed to open camera')
-            return
-            
-        # Timer for publishing images
-        self.timer = self.create_timer(0.1, self.publish_frame)  # 10 FPS
-        
-        # Handshake
-        self.handshake_complete = False
-        self.send_handshake()
-        
-        self.get_logger().info('Live camera driver initialized')
-    
-    def send_handshake(self):
-        config_msg = String()
-        config_msg.data = "EuRoC"
-        self.config_publisher.publish(config_msg)
-        self.get_logger().info('Sent handshake request')
-    
-    def ack_callback(self, msg):
-        if msg.data == "ACK":
-            self.handshake_complete = True
-            self.get_logger().info('Handshake complete!')
-    
-    def publish_frame(self):
-        if not self.handshake_complete:
-            return
-            
-        ret, frame = self.cap.read()
-        if ret:
-            # Convert to ROS Image message
-            ros_image = self.bridge.cv2_to_imgmsg(frame, "bgr8")
-            
-            # Publish image
-            self.img_publisher.publish(ros_image)
-            
-            # Publish timestep
-            timestep_msg = Float64()
-            timestep_msg.data = time.time()
-            self.timestep_publisher.publish(timestep_msg)
-    
-    def __del__(self):
-        if hasattr(self, 'cap'):
-            self.cap.release()
-
-def main():
-    rclpy.init()
-    node = LiveCameraDriver()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-
-if __name__ == '__main__':
-    main()
-```
-
-### 4. Make the Script Executable
+3. **In another terminal, start the Gazebo Garden driver:**
 ```bash
-chmod +x ~/ros2_ws/src/ros2_orb_slam3/scripts/live_camera_driver.py
+source ~/ros2_ws/install/setup.bash
+ros2 run ros2_orb_slam3 gazebo_garden_driver.py --ros-args -p camera_topic:=/world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/image
 ```
 
-### 5. Update package.xml
-Add the script to the package.xml:
-```xml
-<export>
-  <build_type>ament_cmake</build_type>
-  <exec_depend>rclpy</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-  <exec_depend>cv_bridge</exec_depend>
-  <exec_depend>python3-opencv</exec_depend>
-</export>
-```
+### Configuration Options
 
-### 6. Update CMakeLists.txt
-Add the script to CMakeLists.txt:
-```cmake
-# Install Python scripts
-install(PROGRAMS
-  scripts/mono_driver_node.py
-  scripts/live_camera_driver.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-```
+**Camera Topic Parameters:**
+- Default: `/world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/image`
+- Camera Info: `/world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/camera_info`
+- Settings: `EuRoC` (default)
 
-### 7. Build and Run
+**Custom Camera Topics:**
+If your camera has a different topic name, you can specify it:
 ```bash
-# Build the package
-cd ~/ros2_ws
-colcon build --symlink-install --packages-select ros2_orb_slam3
-source ./install/setup.bash
+ros2 run ros2_orb_slam3 gazebo_garden_driver.py --ros-args \
+  -p camera_topic:=/your_camera_topic \
+  -p settings_name:=EuRoC
+```
 
-# Terminal 1: Run C++ SLAM node
+**Finding Your Camera Topic:**
+```bash
+# List all available topics
+ros2 topic list | grep camera
+
+# For Gazebo Garden with ROS2 bridge, camera topics typically follow this pattern:
+# /world/{world_name}/model/{model_name}_{instance}/link/camera_link/sensor/camera/image
+
+# Monitor camera topics
+ros2 topic echo /world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/image --once
+```
+
+### Troubleshooting Gazebo Garden
+
+**Common Issues:**
+1. **Camera topic not found**: Use `ros2 topic list` to find the correct camera topic
+2. **No images received**: Check if the camera sensor is properly configured in your world
+3. **Permission issues**: Ensure your user has access to the camera device
+
+**Verification Steps:**
+```bash
+# Check if Gazebo is publishing camera topics
+ros2 topic list | grep -i camera
+
+# Check camera topic frequency
+ros2 topic hz /world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/image
+
+# View camera images (optional)
+ros2 run rqt_image_view rqt_image_view
+```
+
+### Alternative: Using Live Camera Driver
+
+If you want to use a real camera instead of Gazebo, you can use the `live_camera_driver.py`:
+
+```bash
+# Terminal 1: Start ORB-SLAM3 C++ node
+source ~/ros2_ws/install/setup.bash
 ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
 
-# Terminal 2: Run live camera driver
+# Terminal 2: Start live camera driver
+source ~/ros2_ws/install/setup.bash
 ros2 run ros2_orb_slam3 live_camera_driver.py
 ```
 

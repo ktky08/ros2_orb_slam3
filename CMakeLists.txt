@@ -196,6 +196,7 @@ install(PROGRAMS
   scripts/mono_driver_node.py
   scripts/live_camera_driver.py
   scripts/bag_driver.py
+  scripts/gazebo_garden_driver.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

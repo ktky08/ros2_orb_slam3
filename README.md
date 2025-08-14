@@ -50,6 +50,17 @@ If you find this work useful please consider citing the original ORB-SLAM3 paper
 * For newcomers in ROS2 ecosystem, this package serves as an example of building a shared cpp library and also a package with both cpp and python nodes.
 * May not build or work correctly in **resource constrainted hardwares** such as Raspberry Pi 4, Jetson Nano
 
+## 📖 Comprehensive Usage Guide
+
+For detailed instructions on using this package with different datasets and scenarios, see the **[ROS2_ORB_SLAM3_USAGE_GUIDE.md](ROS2_ORB_SLAM3_USAGE_GUIDE.md)** which includes:
+
+- **EuRoC MAV Dataset**: Complete setup and usage instructions
+- **Gazebo Live Simulation**: Real-time camera integration
+- **ROS2 Bag Files**: Processing recorded data
+- **Troubleshooting**: Common issues and solutions
+- **Performance Optimization**: Tips for better performance
+- **Advanced Configuration**: Custom camera parameters and multi-camera setups
+
 ## Testing platforms
 
 1. Intel i5-9300H, x86_64 bit architecture , Ubuntu 22.04 LTS (Jammy Jellyfish) and RO2 Humble Hawksbill (LTS)

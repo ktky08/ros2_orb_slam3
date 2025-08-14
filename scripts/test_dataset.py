@@ -65,14 +65,55 @@ class DatasetTester(Node):
         self.get_logger().info(f'Dataset tester initialized for {self.dataset_type} - {self.sequence_name}')
     
     def get_image_files(self):
-        """Get list of image files from dataset directory"""
+        """Get list of image files from dataset directory based on dataset type"""
         image_extensions = ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']
         image_files = []
         
-        # Look for images in the directory
-        for file in os.listdir(self.dataset_dir):
-            if any(file.lower().endswith(ext) for ext in image_extensions):
-                image_files.append(os.path.join(self.dataset_dir, file))
+        # Handle different dataset structures
+        if self.dataset_type == 'KITTI00-02' or self.dataset_type == 'KITTI03' or self.dataset_type == 'KITTI04-12':
+            # KITTI format: image_2/000000.png, image_2/000001.png, etc.
+            image_dir = os.path.join(self.dataset_dir, 'image_2')
+            if os.path.exists(image_dir):
+                for file in os.listdir(image_dir):
+                    if any(file.lower().endswith(ext) for ext in image_extensions):
+                        image_files.append(os.path.join(image_dir, file))
+            else:
+                # Fallback: look directly in dataset directory
+                for file in os.listdir(self.dataset_dir):
+                    if any(file.lower().endswith(ext) for ext in image_extensions):
+                        image_files.append(os.path.join(self.dataset_dir, file))
+        
+        elif self.dataset_type == 'TUM-VI':
+            # TUM-VI format: cam0/1403715282262142976.png, cam0/1403715282312143104.png, etc.
+            image_dir = os.path.join(self.dataset_dir, 'cam0')
+            if os.path.exists(image_dir):
+                for file in os.listdir(image_dir):
+                    if any(file.lower().endswith(ext) for ext in image_extensions):
+                        image_files.append(os.path.join(image_dir, file))
+            else:
+                # Fallback: look directly in dataset directory
+                for file in os.listdir(self.dataset_dir):
+                    if any(file.lower().endswith(ext) for ext in image_extensions):
+                        image_files.append(os.path.join(self.dataset_dir, file))
+        
+        elif self.dataset_type == 'EuRoC':
+            # EuRoC format: mav0/cam0/data/1403638567777829376.png, etc.
+            image_dir = os.path.join(self.dataset_dir, 'mav0', 'cam0', 'data')
+            if os.path.exists(image_dir):
+                for file in os.listdir(image_dir):
+                    if any(file.lower().endswith(ext) for ext in image_extensions):
+                        image_files.append(os.path.join(image_dir, file))
+            else:
+                # Fallback: look directly in dataset directory
+                for file in os.listdir(self.dataset_dir):
+                    if any(file.lower().endswith(ext) for ext in image_extensions):
+                        image_files.append(os.path.join(self.dataset_dir, file))
+        
+        else:
+            # Default: look directly in dataset directory
+            for file in os.listdir(self.dataset_dir):
+                if any(file.lower().endswith(ext) for ext in image_extensions):
+                    image_files.append(os.path.join(self.dataset_dir, file))
         
         # Sort files to ensure consistent order
         image_files.sort()

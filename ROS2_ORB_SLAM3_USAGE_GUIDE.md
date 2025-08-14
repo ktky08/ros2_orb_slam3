@@ -6,9 +6,10 @@ This guide provides comprehensive instructions for using the ROS2 ORB-SLAM3 pack
 1. [Prerequisites](#prerequisites)
 2. [Installation](#installation)
 3. [Using with EuRoC MAV Dataset](#using-with-euroc-mav-dataset)
-4. [Using with Gazebo Live Simulation](#using-with-gazebo-live-simulation)
-5. [Using with ROS2 Bag Files](#using-with-ros2-bag-files)
-6. [Troubleshooting](#troubleshooting)
+4. [Using with Other Datasets (KITTI, TUM-VI, etc.)](#using-with-other-datasets-kitti-tum-vi-etc)
+5. [Using with Gazebo Live Simulation](#using-with-gazebo-live-simulation)
+6. [Using with ROS2 Bag Files](#using-with-ros2-bag-files)
+7. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
@@ -132,12 +133,236 @@ To use your own EuRoC MAV dataset:
    ros2 run ros2_orb_slam3 mono_driver_node.py --ros-args -p settings_name:=EuRoC -p image_seq:=your_dataset_name
    ```
 
+## Using with Other Datasets (KITTI, TUM-VI, etc.)
+
+The ORB-SLAM3 package includes configuration files for multiple popular datasets. You can use these configurations with your own dataset files.
+
+### Available Dataset Configurations
+
+The package includes configurations for:
+
+**Monocular Mode:**
+- `EuRoC.yaml` - EuRoC MAV dataset
+- `KITTI00-02.yaml`, `KITTI03.yaml`, `KITTI04-12.yaml` - KITTI dataset sequences
+- `TUM1.yaml`, `TUM2.yaml`, `TUM3.yaml` - TUM RGB-D dataset
+- `TUM-VI.yaml` - TUM Visual-Inertial dataset
+- `RealSense_D435i.yaml`, `RealSense_T265.yaml` - Intel RealSense cameras
+- `NTU_VIRAL.yaml` - NTU VIRAL dataset
+- `GazeboGarden.yaml` - Gazebo Garden simulation
+
+**Stereo Mode:**
+- `EuRoC.yaml` - EuRoC MAV dataset (stereo)
+- `KITTI00-02.yaml`, `KITTI03.yaml`, `KITTI04-12.yaml` - KITTI dataset (stereo)
+- `TUM-VI.yaml` - TUM Visual-Inertial dataset (stereo)
+- `RealSense_D435i.yaml`, `RealSense_T265.yaml` - Intel RealSense cameras (stereo)
+
+**Monocular-Inertial Mode:**
+- `EuRoC.yaml` - EuRoC MAV dataset (with IMU)
+- `TUM-VI.yaml` - TUM Visual-Inertial dataset (with IMU)
+- `RealSense_D435i.yaml`, `RealSense_T265.yaml` - Intel RealSense cameras (with IMU)
+
+### Using KITTI Dataset
+
+1. **Download KITTI Dataset:**
+   ```bash
+   # Download from KITTI website: http://www.cvlibs.net/datasets/kitti/eval_odometry.php
+   # Extract to: ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/kitti_sequence_XX/
+   ```
+
+2. **Prepare Your Dataset:**
+   ```bash
+   # Create directory structure
+   mkdir -p ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/kitti_sequence_00
+   
+   # Copy images to the directory
+   # KITTI format: image_2/000000.png, image_2/000001.png, etc.
+   cp /path/to/kitti/sequences/00/image_2/*.png ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/kitti_sequence_00/
+   ```
+
+3. **Run with KITTI Configuration:**
+   ```bash
+   # Terminal 1: Start the C++ SLAM node
+   cd ~/ros2_ws
+   source ./install/setup.bash
+   ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
+
+   # Terminal 2: Start the Python driver node
+   cd ~/ros2_ws
+   source ./install/setup.bash
+   ros2 run ros2_orb_slam3 mono_driver_node.py --ros-args -p settings_name:=KITTI00-02 -p image_seq:=kitti_sequence_00
+   ```
+
+### Using TUM-VI Dataset
+
+1. **Download TUM-VI Dataset:**
+   ```bash
+   # Download from TUM website: https://vision.in.tum.de/data/datasets/visual-inertial-dataset
+   # Extract to: ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/tum_vi_room1/
+   ```
+
+2. **Prepare Your Dataset:**
+   ```bash
+   # Create directory structure
+   mkdir -p ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/tum_vi_room1
+   
+   # Copy images to the directory
+   # TUM-VI format: cam0/1403715282262142976.png, cam0/1403715282312143104.png, etc.
+   cp /path/to/tum_vi/dataset-room1_512_16/cam0/*.png ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/tum_vi_room1/
+   ```
+
+3. **Run with TUM-VI Configuration:**
+   ```bash
+   # Terminal 1: Start the C++ SLAM node
+   cd ~/ros2_ws
+   source ./install/setup.bash
+   ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
+
+   # Terminal 2: Start the Python driver node
+   cd ~/ros2_ws
+   source ./install/setup.bash
+   ros2 run ros2_orb_slam3 mono_driver_node.py --ros-args -p settings_name:=TUM-VI -p image_seq:=tum_vi_room1
+   ```
+
+### Using Custom Datasets
+
+To use your own dataset with any of the provided configurations:
+
+1. **Choose the appropriate configuration file** based on your camera parameters:
+   - Check the camera resolution, FOV, and calibration parameters
+   - Match your dataset to the closest configuration
+
+2. **Prepare your image sequence:**
+   ```bash
+   # Create directory for your dataset
+   mkdir -p ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/my_dataset
+   
+   # Copy your images (PNG or JPG format)
+   cp /path/to/your/images/*.png ~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/my_dataset/
+   ```
+
+3. **Run with the chosen configuration:**
+   ```bash
+   # Terminal 1: Start the C++ SLAM node
+   cd ~/ros2_ws
+   source ./install/setup.bash
+   ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
+
+   # Terminal 2: Start the Python driver node
+   cd ~/ros2_ws
+   source ./install/setup.bash
+   ros2 run ros2_orb_slam3 mono_driver_node.py --ros-args -p settings_name:=EuRoC -p image_seq:=my_dataset
+   ```
+
+### Configuration File Details
+
+Each configuration file contains:
+
+- **Camera Parameters:** Intrinsic calibration (fx, fy, cx, cy), distortion coefficients
+- **Image Settings:** Resolution, FPS, color format
+- **ORB Parameters:** Number of features, scale factors, FAST thresholds
+- **Viewer Parameters:** Visualization settings
+
+**Example KITTI Configuration:**
+```yaml
+Camera1.fx: 718.856
+Camera1.fy: 718.856
+Camera1.cx: 607.1928
+Camera1.cy: 185.2157
+Camera.width: 1241
+Camera.height: 376
+Camera.fps: 10
+```
+
+**Example TUM-VI Configuration:**
+```yaml
+Camera1.fx: 190.978477
+Camera1.fy: 190.973307
+Camera1.cx: 254.931706
+Camera1.cy: 256.897442
+Camera.width: 512
+Camera.height: 512
+Camera.fps: 20
+```
+
+### Tips for Dataset Selection
+
+1. **Camera Resolution:** Choose a configuration that matches your image resolution
+2. **Frame Rate:** Higher FPS configurations work better with fast-moving sequences
+3. **Camera Type:** 
+   - `PinHole` for standard cameras (KITTI, EuRoC)
+   - `KannalaBrandt8` for fisheye cameras (TUM-VI)
+4. **Feature Count:** Adjust `ORBextractor.nFeatures` based on your scene complexity
+
+### Installed Test Datasets
+
+The package now includes the following test datasets ready for use:
+
+**Available Datasets:**
+- **EuRoC MH05**: `sample_euroc_MH05` (original sample)
+- **KITTI Sequence 00**: `kitti_sequence_00` (585 images, KITTI-style)
+- **TUM-VI Room1**: `tum_vi_room1` (585 images, TUM-VI-style)
+
+**Dataset Locations:**
+```bash
+~/ros2_ws/src/ros2_orb_slam3/TEST_DATASET/
+├── sample_euroc_MH05/     # Original EuRoC sample
+├── kitti_sequence_00/     # KITTI-style test dataset
+└── tum_vi_room1/         # TUM-VI-style test dataset
+```
+
+**Quick Test Commands:**
+```bash
+# Test KITTI dataset
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py KITTI00-02 kitti_sequence_00
+
+# Test TUM-VI dataset  
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py TUM-VI tum_vi_room1
+
+# Test EuRoC dataset
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py EuRoC sample_euroc_MH05
+```
+
+### Quick Dataset Testing
+
+For quick testing of different datasets, you can use the `test_dataset.py` script:
+
+```bash
+# Test with EuRoC dataset (default)
+source ~/ros2_ws/install/setup.bash
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py EuRoC sample_euroc_MH05
+
+# Test with KITTI configuration
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py KITTI00-02 kitti_sequence_00
+
+# Test with TUM-VI configuration
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py TUM-VI tum_vi_room1
+
+# Test with custom dataset
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py EuRoC my_custom_dataset
+```
+
+**Usage:**
+```bash
+python3 ~/ros2_ws/install/ros2_orb_slam3/lib/ros2_orb_slam3/test_dataset.py [dataset_type] [sequence_name]
+```
+
+**Parameters:**
+- `dataset_type`: Configuration file name (e.g., EuRoC, KITTI00-02, TUM-VI)
+- `sequence_name`: Directory name in TEST_DATASET folder
+
+**Note:** The script automatically:
+- Loads images from the specified dataset directory
+- Publishes them at 10 FPS to the ORB-SLAM3 system
+- Shows progress updates every 50 frames
+- Completes when all images are processed
+
 ## Using with Gazebo Garden Live Simulation
 
 ### Prerequisites
 - Gazebo Garden (gz sim 8.9.0 or later) installed
 - PX4 SITL (Software In The Loop) setup
 - Camera sensor configured in your Gazebo world
+- Camera calibration parameters (intrinsic matrix, distortion coefficients)
 
 ### Setup Steps
 
@@ -161,6 +386,30 @@ ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
 source ~/ros2_ws/install/setup.bash
 ros2 run ros2_orb_slam3 gazebo_garden_driver.py --ros-args -p camera_topic:=/world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/image
 ```
+
+### Camera Configuration
+
+**Important:** ORB-SLAM3 requires camera calibration parameters to work properly. The package includes a custom configuration for Gazebo Garden:
+
+**Default Configuration File:** `orb_slam3/config/Monocular/GazeboGarden.yaml`
+
+**Key Camera Parameters:**
+- **Focal Length:** fx=500.0, fy=500.0 (pixels)
+- **Principal Point:** cx=320.0, cy=240.0 (image center)
+- **Resolution:** 640x480 pixels
+- **Distortion:** Minimal (k1=k2=p1=p2=0.0 for simulated camera)
+
+**Customizing Camera Parameters:**
+If your camera has different parameters, edit the configuration file:
+```bash
+# Edit the camera configuration
+nano ~/ros2_ws/src/ros2_orb_slam3/orb_slam3/config/Monocular/GazeboGarden.yaml
+```
+
+**Finding Your Camera Parameters:**
+1. **For real cameras:** Use camera calibration tools (e.g., `camera_calibration` package)
+2. **For Gazebo:** Check your camera model's SDF/URDF file for intrinsic parameters
+3. **For unknown cameras:** Start with the default values and adjust based on performance
 
 ### Configuration Options
 
@@ -195,6 +444,14 @@ ros2 topic echo /world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/c
 1. **Camera topic not found**: Use `ros2 topic list` to find the correct camera topic
 2. **No images received**: Check if the camera sensor is properly configured in your world
 3. **Permission issues**: Ensure your user has access to the camera device
+4. **Poor SLAM performance**: Check camera calibration parameters
+5. **No features detected**: Adjust ORB parameters or check image quality
+
+**Camera Calibration Issues:**
+- **Blurry tracking:** Increase `ORBextractor.iniThFAST` and `ORBextractor.minThFAST`
+- **Too few features:** Increase `ORBextractor.nFeatures` or improve lighting
+- **Scale issues:** Verify focal length (fx, fy) matches your camera
+- **Distortion problems:** Check distortion coefficients (k1, k2, p1, p2)
 
 **Verification Steps:**
 ```bash

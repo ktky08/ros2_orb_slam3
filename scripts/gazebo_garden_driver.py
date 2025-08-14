@@ -15,7 +15,7 @@ class GazeboGardenDriver(Node):
         # Parameters for Gazebo Garden
         self.declare_parameter('camera_topic', '/world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/image')
         self.declare_parameter('camera_info_topic', '/world/z_my_forest/model/x500_custom_0/link/camera_link/sensor/camera/camera_info')
-        self.declare_parameter('settings_name', 'EuRoC')
+        self.declare_parameter('settings_name', 'GazeboGarden')
         
         camera_topic = self.get_parameter('camera_topic').value
         settings_name = self.get_parameter('settings_name').value

@@ -194,9 +194,9 @@ ament_python_install_package(${PROJECT_NAME}) # Install the modules in ros2_orb_
 # Install Python executibles
 install(PROGRAMS
   scripts/mono_driver_node.py
-  scripts/live_camera_driver.py
   scripts/bag_driver.py
   scripts/gazebo_garden_driver.py
+  scripts/test_dataset.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
